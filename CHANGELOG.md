@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.3](https://github.com/hashrock/vscode-sprite-editor-extension/compare/v0.0.2...v0.0.3) (2020-09-07)
+
+
+### Bug Fixes
+
+* move vscode-easy-custom-editor to deps ([1ea61b6](https://github.com/hashrock/vscode-sprite-editor-extension/commit/1ea61b6ff37dff50b11b30aede818750f13ddda8))
+
 ### 0.0.2 (2020-09-07)
 
 
