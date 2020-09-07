@@ -2,6 +2,14 @@
   <div>
     <div class="wrapper">
       <canvas
+        class="bg"
+        :style="canvasStyle"
+        ref="canvasBg"
+        width="200"
+        height="200"
+       />
+      <canvas
+        class="canvasMain"
         :style="canvasStyle"
         ref="canvas"
         @pointerdown="down"
@@ -16,6 +24,9 @@
       <button class="palette" v-for="c in colors" :key="c" :style="{backgroundColor: `${c}`}" @click="selectedColor = c"></button>
     </div>
     <div>
+      <label>
+        <input type="checkbox" v-model="eraser">Eraser
+      </label>
       <select v-model.number="scale">
         <option value="1">x1</option>
         <option value="2">x2</option>
@@ -24,6 +35,11 @@
         <option value="16">x16</option>
         <option value="32">x32</option>
       </select>
+      <select v-model.number="strokeWidth">
+        <option value="1">w1</option>
+        <option value="2">w2</option>
+        <option value="3">w3</option>
+      </select>      
     </div>
   </div>
 </template>
@@ -98,7 +114,8 @@ export default {
       selectedColor: "#FF0000",
       width: 200,
       height: 200,
-      colors: colors
+      colors: colors,
+      strokeWidth: 1
     };
   },
   computed: {
@@ -120,8 +137,7 @@ export default {
             canvas.height = 32;
             canvas.width = 32;
             ctx.clearRect(0, 0, 32, 32)
-            // ctx.fillStyle = "white";
-            // ctx.fillRect(0, 0, 32, 32);
+            this.setupCanvasBg(32, 32)
             return;
           } else {
             // Load the initial image into the canvas.
@@ -158,6 +174,28 @@ export default {
     vscode.postMessage({ type: "ready" });
   },
   methods: {
+    setupCanvasBg(width, height){
+      const canvas = this.$refs.canvasBg
+      const ctx = canvas.getContext("2d")
+      canvas.width = width
+      canvas.height = height
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      for(let y = 0; y < imageData.height; y++){
+        for(let x = 0; x < imageData.width; x++){
+          const start = (y * imageData.width + x) * 4;
+          let bright = x % 2 === 0
+          if(y % 2 === 0){
+            bright = !bright
+          }
+          imageData.data[start] = bright ? 200 : 180;
+          imageData.data[start+1] = bright ? 200 : 180;
+          imageData.data[start+2] = bright ? 200 : 180;
+          imageData.data[start+3] = 255;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+    },
     async reset(data) {
       if (data) {
         const img = await loadImageFromData(data);
@@ -170,6 +208,8 @@ export default {
 
         imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         this.ready = true;
+
+        this.setupCanvasBg(canvas.width, canvas.height)
         this.redraw();
       }
     },
@@ -211,7 +251,27 @@ export default {
       let err = dx - dy;
 
       while (true) {
-        this.setPixel(x0, y0);
+        if(this.strokeWidth === 1){
+          this.setPixel(x0, y0);
+        }
+        if(this.strokeWidth === 2){
+          this.setPixel(x0, y0);
+          this.setPixel(x0+1, y0);
+          this.setPixel(x0, y0+1);
+          this.setPixel(x0+1, y0+1);
+        }
+        if(this.strokeWidth === 3){
+          this.setPixel(x0-1, y0-1);
+          this.setPixel(x0-1, y0);
+          this.setPixel(x0-1, y0+1);
+          this.setPixel(x0, y0-1);
+          this.setPixel(x0, y0);
+          this.setPixel(x0, y0+1);
+          this.setPixel(x0+1, y0-1);
+          this.setPixel(x0+1, y0);
+          this.setPixel(x0+1, y0+1);
+        }
+
         if (x0 == x1 && y0 == y1) {
           break;
         }
@@ -241,10 +301,17 @@ export default {
       }
 
       const start = (y * this.width + x) * 4;
-      imageData.data[start] = parseInt(this.selectedColor.slice(1, 3), 16);
-      imageData.data[start + 1] = parseInt(this.selectedColor.slice(3, 5), 16);
-      imageData.data[start + 2] = parseInt(this.selectedColor.slice(5, 7), 16);
-      imageData.data[start + 3] = 255;
+      if(this.eraser){
+        imageData.data[start] = 0;
+        imageData.data[start + 1] = 0;
+        imageData.data[start + 2] = 0;
+        imageData.data[start + 3] = 0;
+      }else{
+        imageData.data[start] = parseInt(this.selectedColor.slice(1, 3), 16);
+        imageData.data[start + 1] = parseInt(this.selectedColor.slice(3, 5), 16);
+        imageData.data[start + 2] = parseInt(this.selectedColor.slice(5, 7), 16);
+        imageData.data[start + 3] = 255;
+      }
     }
   }
 };
@@ -257,7 +324,6 @@ canvas {
   left: 0;
   touch-action: none;
   transform-origin: top left;
-  background: white;
   image-rendering: pixelated;
 }
 
