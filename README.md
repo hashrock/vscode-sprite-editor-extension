@@ -1,5 +1,7 @@
 # VSCode Sprite Editor Extension
 
+![vscode-sprite-ext-01](https://user-images.githubusercontent.com/3132889/92393088-467a6b00-f15a-11ea-8d04-f1e5bda9b5ba.gif)
+
 - PNGの編集が可能です。
 - 右クリックでスポイト
 - 塗りつぶし機能つき
