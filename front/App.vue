@@ -143,8 +143,15 @@ export default {
           if (body.untitled) {
             canvas.height = 32;
             canvas.width = 32;
+            this.width = 32
+            this.height = 32
             ctx.clearRect(0, 0, 32, 32);
             this.setupCanvasBg(32, 32);
+            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            vscode.postMessage({
+              type: "update",
+              snapshot: await getImageData()
+            });
             return;
           } else {
             // Load the initial image into the canvas.
