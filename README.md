@@ -1,29 +1,30 @@
-# VSCode Easy Custom Editor Example
+# VSCode Sprite Editor Extension
 
-下記packageのExampleです。
+- PNGの編集が可能です。
+- 右クリックでスポイト
+- 塗りつぶし機能つき
 
-https://github.com/hashrock/vscode-easy-custom-editor
+# できないこと
 
-# 動機
+- リサイズ
+- 範囲選択や移動
+- パレットの作成や保存
+- その他ドット絵ツールに求められる基本的な機能すべて
 
-- VSCode Extension難しすぎる
-- ブートストラップコードが多すぎ
-- undo / redo難しすぎ
+# バグ
 
-# 構成
+- 塗り残しが発生する
+- アンドゥ履歴が怪しい
+- そもそも安定している気がしない
 
-- Node.jsサイドがお仕着せになっている
-- client / host間は基本的にファイルのスナップショットを送り合っている
-- undoバッファはスナップショットをフルで持っている
-  - 特に解放はしていないので注意。用途によってはメモリがひどいことになる
+# バグ報告について
 
-# 制約
+- 報告はありがたいんですが直す気力はあまりないと思います
+- 修正PRまでくれると嬉しいです
 
-- フロントのbundleはmedia/dist/assets/js/index.js一本にすること
-- CSSはinlineにすること
+# ビルド手順
 
-# おかしなところ
-
-- undo / redoがずれる時がある？
-- そもそもundoやロードが遅い
-- どっかpromise内で例外が発生している
+- yarn
+- yarn watch:front
+- VSCodeで開いてF5で実行
+- front内を編集した場合はリロードが必要

@@ -1,10 +1,10 @@
 {
-	"name": "cat-customs",
-	"displayName": "Cat Customs",
-	"description": "Custom Editor API Samples",
+	"name": "vscode-sprite-editor",
+	"displayName": "VSCode Sprite Editor Extension",
+	"description": "VSCode Sprite Editor Extension",
 	"version": "0.0.1",
 	"enableProposedApi": true,
-	"publisher": "vscode-samples",
+	"publisher": "hashrock",
 	"engines": {
 		"vscode": "^1.46.0"
 	},
@@ -12,8 +12,8 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCustomEditor:catCustoms.pawDraw",
-		"onCommand:catCustoms.pawDraw.new"
+		"onCustomEditor:hashrock.spriteEditor",
+		"onCommand:hashrock.spriteEditor.new"
 	],
 	"repository": {
 		"type": "git",
@@ -23,20 +23,21 @@
 	"contributes": {
 		"customEditors": [
 			{
-				"viewType": "catCustoms.pawDraw",
-				"displayName": "Paw Draw",
+				"viewType": "hashrock.spriteEditor",
+				"displayName": "Sprite Editor",
 				"selector": [
 					{
 						"filenamePattern": "*.png"
 					}
-				]
+				],
+				"priority": "option"
 			}
 		],
 		"commands": [
 			{
-				"command": "catCustoms.pawDraw.new",
-				"title": "Create new Paw Draw Document",
-				"category": "Paw Draw"
+				"command": "hashrock.spriteEditor.new",
+				"title": "Create new PNG image",
+				"category": "Sprite Editor"
 			}
 		]
 	},
