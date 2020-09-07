@@ -13,6 +13,7 @@
     </div>
     <div>
       <input type="color" v-model="selectedColor" />
+      <button class="palette" v-for="c in colors" :key="c" :style="{backgroundColor: `${c}`}" @click="selectedColor = c"></button>
     </div>
   </div>
 </template>
@@ -22,7 +23,24 @@ const vscode = acquireVsCodeApi();
 let canvas;
 let ctx;
 let arr;
-
+const colors = [
+  "#000000",
+  "#9d9d9d",
+  "#ffffff",
+  "#be2633",
+  "#e06f8b",
+  "#493c2b",
+  "#a46422",
+  "#eb8931",
+  "#f7e26b",
+  "#2f484e",
+  "#44891a",
+  "#a3ce27",
+  "#1b2632",
+  "#005784",
+  "#31a2f2",
+  "#b2dcef"
+];
 async function loadImageFromData(initialContent) {
   const blob = new Blob([initialContent], { type: "image/png" });
   const url = URL.createObjectURL(blob);
@@ -66,10 +84,11 @@ export default {
       eraser: false,
       color: "black",
       lineWidth: 1,
-      scale: 8,
+      scale: 16,
       selectedColor: "#FF0000",
       width: 200,
-      height: 200
+      height: 200,
+      colors: colors
     };
   },
   computed: {
@@ -88,10 +107,11 @@ export default {
       switch (type) {
         case "init": {
           if (body.untitled) {
-            canvas.height = 100;
-            canvas.width = 100;
-            ctx.fillStyle = "white";
-            ctx.fillRect(0, 0, 100, 100);
+            canvas.height = 32;
+            canvas.width = 32;
+            ctx.clearRect(0, 0, 32, 32)
+            // ctx.fillStyle = "white";
+            // ctx.fillRect(0, 0, 32, 32);
             return;
           } else {
             // Load the initial image into the canvas.
@@ -237,5 +257,11 @@ canvas {
   height: 600px;
   background: #ddd;
   overflow: scroll;
+}
+
+.palette{
+  width: 16px;
+  height: 16px;
+  border: none;
 }
 </style>
