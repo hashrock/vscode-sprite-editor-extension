@@ -50,7 +50,6 @@
 		"watch:front": "poi --watch"
 	},
 	"devDependencies": {
-		"@hashrock/vscode-easy-custom-editor": "^1.0.1",
 		"@types/node": "^12.12.55",
 		"@types/vscode": "^1.48.0",
 		"@typescript-eslint/eslint-plugin": "^3.10.1",
@@ -61,5 +60,8 @@
 		"typescript": "^3.9.7",
 		"vue": "^2.6.12",
 		"vue-template-compiler": "^2.6.11"
+	},
+	"dependencies": {
+		"@hashrock/vscode-easy-custom-editor": "^1.0.1"
 	}
 }
