@@ -1,7 +1,8 @@
 <template>
 	<div>
-		<div>
+		<div class="wrapper">
 			<canvas
+        :style="canvasStyle"
 				ref="canvas"
 				@pointerdown="down"
 				@pointermove="move"
@@ -10,6 +11,9 @@
 				height="200"
 			/>
 		</div>
+    <div>
+      <input type="color" v-model="selectedColor" />
+    </div>
 	</div>
 </template>
 
@@ -17,6 +21,7 @@
 const vscode = acquireVsCodeApi();
 let canvas;
 let ctx;
+let arr;
 
 async function loadImageFromData(initialContent) {
 	const blob = new Blob([initialContent], { type: 'image/png' });
@@ -49,6 +54,10 @@ async function getImageData() {
 	return new Uint8Array(await blob.arrayBuffer());
 }
 
+function round(p){
+  return Math.floor(p)
+}
+
 export default {
 	data() {
 		return {
@@ -56,15 +65,24 @@ export default {
 			old: null,
 			eraser: false,
 			color: 'black',
-			lineWidth: 1
+      lineWidth: 1,
+      scale: 8,
+      selectedColor: "#FF0000",
+      width: 200,
+      height: 200
 		};
-	},
+  },
+  computed:{
+    canvasStyle(){
+      return {
+        transform: `scale(${this.scale})`,
+      }
+    }
+  },
 	mounted() {
-		canvas = this.$refs.canvas;
-		ctx = canvas.getContext('2d', {
-			desynchronized: true
-		});
-		ctx.lineCap = 'round';
+    canvas = this.$refs.canvas;
+		ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
 		window.addEventListener('message', async e => {
 			const { type, body, requestId } = e.data;
 			switch (type) {
@@ -106,21 +124,27 @@ export default {
 	methods: {
 		async reset(data) {
 			if (data) {
-				const img = await loadImageFromData(data);
-				// this.initialCanvas.width = this.drawingCanvas.width = img.naturalWidth;
-				// this.initialCanvas.height = this.drawingCanvas.height = img.naturalHeight;
+        const img = await loadImageFromData(data);
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				ctx.drawImage(img, 0, 0);
-				this.ready = true;
+        this.width = canvas.width
+        this.height = canvas.height
+
+        arr = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        this.ready = true;
+        this.redraw()
 			}
 		},
 		down(ev) {
 			canvas.setPointerCapture(ev.pointerId);
 			this.drag = true;
 			this.old = {
-				x: ev.offsetX,
-				y: ev.offsetY
-			};
+				x: round(ev.offsetX),
+				y: round(ev.offsetY)
+      };
+      this.move(ev)
 		},
 		async up() {
 			this.drag = false;
@@ -132,24 +156,80 @@ export default {
 		},
 		move(ev) {
 			if (this.drag) {
-				ctx.beginPath();
-				ctx.strokeStyle = this.color;
-				ctx.moveTo(this.old.x, this.old.y);
-				ctx.lineTo(ev.offsetX, ev.offsetY);
-				ctx.stroke();
+        this.line(this.old.x, this.old.y, round(ev.offsetX), round(ev.offsetY));
 				this.old = {
-					x: ev.offsetX,
-					y: ev.offsetY
-				};
+					x: round(ev.offsetX),
+					y: round(ev.offsetY)
+        };
+        this.redraw()
 			}
-		}
+    },
+    redraw() {
+      ctx.putImageData(arr, 0, 0);
+    },
+    line(x0, y0, x1, y1) {
+      const dx = Math.abs(x1 - x0);
+      const dy = Math.abs(y1 - y0);
+      const sx = x0 < x1 ? 1 : -1;
+      const sy = y0 < y1 ? 1 : -1;
+      let err = dx - dy;
+
+      while (true) {
+        this.setPixel(x0, y0);
+        if (x0 == x1 && y0 == y1) {
+          break;
+        }
+        const e2 = err << 1;
+        if (e2 > -dy) {
+          err -= dy;
+          x0 += sx;
+        }
+        if (e2 < dx) {
+          err += dx;
+          y0 += sy;
+        }
+      }
+    },
+    setPixel(x, y) {
+      if (x < 0) {
+        return;
+      }
+      if (y < 0) {
+        return;
+      }
+      if (x > this.width) {
+        return;
+      }
+      if (y > this.height) {
+        return;
+      }
+
+      const start = (y * this.width + x) * 4;
+      arr.data[start] = parseInt(this.selectedColor.slice(1, 3), 16);
+      arr.data[start + 1] = parseInt(this.selectedColor.slice(3, 5), 16);
+      arr.data[start + 2] = parseInt(this.selectedColor.slice(5, 7), 16);
+      arr.data[start + 3] = 255;
+    },
 	}
 };
 </script>
 
 <style>
 canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
 	touch-action: none;
+  transform-origin: top left;
 	background: white;
+  image-rendering: pixelated;
+}
+
+.wrapper{
+  position: relative;
+  width: 800px;
+  height: 600px;
+  background: #DDD;
+  overflow: scroll;
 }
 </style>
