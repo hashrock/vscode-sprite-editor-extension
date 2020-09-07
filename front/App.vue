@@ -15,6 +15,16 @@
       <input type="color" v-model="selectedColor" />
       <button class="palette" v-for="c in colors" :key="c" :style="{backgroundColor: `${c}`}" @click="selectedColor = c"></button>
     </div>
+    <div>
+      <select v-model.number="scale">
+        <option value="1">x1</option>
+        <option value="2">x2</option>
+        <option value="4">x4</option>
+        <option value="8">x8</option>
+        <option value="16">x16</option>
+        <option value="32">x32</option>
+      </select>
+    </div>
   </div>
 </template>
 
@@ -22,7 +32,7 @@
 const vscode = acquireVsCodeApi();
 let canvas;
 let ctx;
-let arr;
+let imageData;
 const colors = [
   "#000000",
   "#9d9d9d",
@@ -158,7 +168,7 @@ export default {
         this.width = canvas.width;
         this.height = canvas.height;
 
-        arr = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         this.ready = true;
         this.redraw();
       }
@@ -191,7 +201,7 @@ export default {
       }
     },
     redraw() {
-      ctx.putImageData(arr, 0, 0);
+      ctx.putImageData(imageData, 0, 0);
     },
     line(x0, y0, x1, y1) {
       const dx = Math.abs(x1 - x0);
@@ -231,10 +241,10 @@ export default {
       }
 
       const start = (y * this.width + x) * 4;
-      arr.data[start] = parseInt(this.selectedColor.slice(1, 3), 16);
-      arr.data[start + 1] = parseInt(this.selectedColor.slice(3, 5), 16);
-      arr.data[start + 2] = parseInt(this.selectedColor.slice(5, 7), 16);
-      arr.data[start + 3] = 255;
+      imageData.data[start] = parseInt(this.selectedColor.slice(1, 3), 16);
+      imageData.data[start + 1] = parseInt(this.selectedColor.slice(3, 5), 16);
+      imageData.data[start + 2] = parseInt(this.selectedColor.slice(5, 7), 16);
+      imageData.data[start + 3] = 255;
     }
   }
 };
