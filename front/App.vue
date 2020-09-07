@@ -117,7 +117,7 @@ export default {
       color: "black",
       lineWidth: 1,
       scale: 16,
-      selectedColor: "#FF0000",
+      selectedColor: "#000000",
       width: 200,
       height: 200,
       colors: colors,
@@ -404,7 +404,7 @@ canvas {
   position: relative;
   width: 800px;
   height: 600px;
-  background: #ddd;
+  background: #333;
   overflow: scroll;
 }
 
