@@ -20,16 +20,17 @@
         v-for="c in colors"
         :key="c"
         :style="{backgroundColor: `${c}`}"
-        @click="selectedColor = c"
+        @click="selectColor(c)"
       ></button>
     </div>
     <div>
-      <label>
-        <input type="checkbox" v-model="eraser" />Eraser
-      </label>
-      <label>
-        <input type="checkbox" v-model="flood" />flood
-      </label>
+      <input type="radio" id="pen" value="pen" v-model="tool" />
+      <label for="pen">Pen</label>
+      <input type="radio" id="eraser" value="eraser" v-model="tool" />
+      <label for="eraser">Eraser</label>
+      <input type="radio" id="fill" value="fill" v-model="tool" />
+      <label for="fill">Fill</label>
+
       <select v-model.number="scale">
         <option value="1">x1</option>
         <option value="2">x2</option>
@@ -53,7 +54,7 @@ let canvas;
 let ctx;
 let imageData;
 import * as FloodFill from "./flood";
-import * as color from "./color"
+import * as color from "./color";
 
 const colors = [
   "#000000",
@@ -113,7 +114,6 @@ export default {
     return {
       drag: false,
       old: null,
-      eraser: false,
       color: "black",
       lineWidth: 1,
       scale: 16,
@@ -122,7 +122,7 @@ export default {
       height: 200,
       colors: colors,
       strokeWidth: 1,
-      flood: false
+      tool: "pen"
     };
   },
   computed: {
@@ -222,7 +222,7 @@ export default {
     },
     down(ev) {
       if (ev.button === 0) {
-        if (this.flood) {
+        if (this.tool === "fill") {
           this.startFlood(round(ev.offsetX), round(ev.offsetY));
         } else {
           canvas.setPointerCapture(ev.pointerId);
@@ -242,9 +242,9 @@ export default {
           parseInt(pixel[1]).toString(16) +
           parseInt(pixel[2]).toString(16);
         if (pixel[3] === 0) {
-          this.eraser = true;
+          this.tool = "eraser";
         } else {
-          this.eraser = false;
+          this.tool = "pen";
         }
       }
     },
@@ -329,7 +329,7 @@ export default {
       }
 
       const start = (y * this.width + x) * 4;
-      if (this.eraser) {
+      if (this.tool === "eraser") {
         imageData.data[start] = 0;
         imageData.data[start + 1] = 0;
         imageData.data[start + 2] = 0;
@@ -360,7 +360,7 @@ export default {
       ];
     },
     async startFlood(x, y) {
-      const fillColor = color.colorToRGBA(this.selectedColor)
+      const fillColor = color.colorToRGBA(this.selectedColor);
 
       FloodFill.floodfill(
         imageData.data,
@@ -381,6 +381,10 @@ export default {
         snapshot: await getImageData()
       });
       this.redraw();
+    },
+    selectColor(c) {
+      this.selectedColor = c;
+      this.tool = "pen";
     }
   }
 };
