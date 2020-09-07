@@ -1,20 +1,20 @@
 <template>
-	<div>
-		<div class="wrapper">
-			<canvas
+  <div>
+    <div class="wrapper">
+      <canvas
         :style="canvasStyle"
-				ref="canvas"
-				@pointerdown="down"
-				@pointermove="move"
-				@pointerup="up"
-				width="200"
-				height="200"
-			/>
-		</div>
+        ref="canvas"
+        @pointerdown="down"
+        @pointermove="move"
+        @pointerup="up"
+        width="200"
+        height="200"
+      />
+    </div>
     <div>
       <input type="color" v-model="selectedColor" />
     </div>
-	</div>
+  </div>
 </template>
 
 <script>
@@ -24,145 +24,151 @@ let ctx;
 let arr;
 
 async function loadImageFromData(initialContent) {
-	const blob = new Blob([initialContent], { type: 'image/png' });
-	const url = URL.createObjectURL(blob);
-	try {
-		const img = document.createElement('img');
-		img.crossOrigin = 'anonymous';
-		img.src = url;
-		await new Promise((resolve, reject) => {
-			img.onload = resolve;
-			img.onerror = reject;
-		});
-		return img;
-	} finally {
-		URL.revokeObjectURL(url);
-	}
+  const blob = new Blob([initialContent], { type: "image/png" });
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = document.createElement("img");
+    img.crossOrigin = "anonymous";
+    img.src = url;
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+    return img;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 async function getImageData() {
-	const outCanvas = document.createElement('canvas');
-	outCanvas.width = canvas.width;
-	outCanvas.height = canvas.height;
+  const outCanvas = document.createElement("canvas");
+  outCanvas.width = canvas.width;
+  outCanvas.height = canvas.height;
 
-	const outCtx = outCanvas.getContext('2d');
-	outCtx.drawImage(canvas, 0, 0);
+  const outCtx = outCanvas.getContext("2d");
+  outCtx.drawImage(canvas, 0, 0);
 
-	const blob = await new Promise(resolve => {
-		outCanvas.toBlob(resolve, 'image/png');
-	});
+  const blob = await new Promise(resolve => {
+    outCanvas.toBlob(resolve, "image/png");
+  });
 
-	return new Uint8Array(await blob.arrayBuffer());
+  return new Uint8Array(await blob.arrayBuffer());
 }
 
-function round(p){
-  return Math.floor(p)
+function round(p) {
+  return Math.floor(p);
 }
 
 export default {
-	data() {
-		return {
-			drag: false,
-			old: null,
-			eraser: false,
-			color: 'black',
+  data() {
+    return {
+      drag: false,
+      old: null,
+      eraser: false,
+      color: "black",
       lineWidth: 1,
       scale: 8,
       selectedColor: "#FF0000",
       width: 200,
       height: 200
-		};
+    };
   },
-  computed:{
-    canvasStyle(){
+  computed: {
+    canvasStyle() {
       return {
-        transform: `scale(${this.scale})`,
-      }
+        transform: `scale(${this.scale})`
+      };
     }
   },
-	mounted() {
+  mounted() {
     canvas = this.$refs.canvas;
-		ctx = canvas.getContext('2d');
+    ctx = canvas.getContext("2d");
     ctx.imageSmoothingEnabled = false;
-		window.addEventListener('message', async e => {
-			const { type, body, requestId } = e.data;
-			switch (type) {
-				case 'init': {
-					if (body.untitled) {
-						canvas.height = 100;
-						canvas.width = 100;
-						ctx.fillStyle = 'white';
-						ctx.fillRect(0, 0, 100, 100);
-						return;
-					} else {
-						// Load the initial image into the canvas.
-						const data = new Uint8Array(body.value.data);
-						await this.reset(data);
-						return;
-					}
-				}
-				case 'update': {
-					let data = body.content ? new Uint8Array(body.content.data) : undefined;
-					//get last snapshot
-					if (body.edits.length > 0) {
-						data = body.edits[body.edits.length - 1].snapshot.data;
-					}
-					await this.reset(new Uint8Array(data));
-					return;
-				}
-				case 'getFileData': {
-					// Get the image data for the canvas and post it back to the extension.
-					getImageData().then(data => {
-						vscode.postMessage({ type: 'response', requestId, body: Array.from(data) });
-					});
-					return;
-				}
-			}
-		});
+    window.addEventListener("message", async e => {
+      const { type, body, requestId } = e.data;
+      switch (type) {
+        case "init": {
+          if (body.untitled) {
+            canvas.height = 100;
+            canvas.width = 100;
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, 100, 100);
+            return;
+          } else {
+            // Load the initial image into the canvas.
+            const data = new Uint8Array(body.value.data);
+            await this.reset(data);
+            return;
+          }
+        }
+        case "update": {
+          let data = body.content
+            ? new Uint8Array(body.content.data)
+            : undefined;
+          //get last snapshot
+          if (body.edits.length > 0) {
+            data = body.edits[body.edits.length - 1].snapshot.data;
+          }
+          await this.reset(new Uint8Array(data));
+          return;
+        }
+        case "getFileData": {
+          // Get the image data for the canvas and post it back to the extension.
+          getImageData().then(data => {
+            vscode.postMessage({
+              type: "response",
+              requestId,
+              body: Array.from(data)
+            });
+          });
+          return;
+        }
+      }
+    });
 
-		vscode.postMessage({ type: 'ready' });
-	},
-	methods: {
-		async reset(data) {
-			if (data) {
+    vscode.postMessage({ type: "ready" });
+  },
+  methods: {
+    async reset(data) {
+      if (data) {
         const img = await loadImageFromData(data);
-        canvas.width = img.naturalWidth
-        canvas.height = img.naturalHeight
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				ctx.drawImage(img, 0, 0);
-        this.width = canvas.width
-        this.height = canvas.height
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        this.width = canvas.width;
+        this.height = canvas.height;
 
         arr = ctx.getImageData(0, 0, canvas.width, canvas.height);
         this.ready = true;
-        this.redraw()
-			}
-		},
-		down(ev) {
-			canvas.setPointerCapture(ev.pointerId);
-			this.drag = true;
-			this.old = {
-				x: round(ev.offsetX),
-				y: round(ev.offsetY)
+        this.redraw();
+      }
+    },
+    down(ev) {
+      canvas.setPointerCapture(ev.pointerId);
+      this.drag = true;
+      this.old = {
+        x: round(ev.offsetX),
+        y: round(ev.offsetY)
       };
-      this.move(ev)
-		},
-		async up() {
-			this.drag = false;
+      this.move(ev);
+    },
+    async up() {
+      this.drag = false;
 
-			vscode.postMessage({
-				type: 'update',
-				snapshot: await getImageData()
-			});
-		},
-		move(ev) {
-			if (this.drag) {
+      vscode.postMessage({
+        type: "update",
+        snapshot: await getImageData()
+      });
+    },
+    move(ev) {
+      if (this.drag) {
         this.line(this.old.x, this.old.y, round(ev.offsetX), round(ev.offsetY));
-				this.old = {
-					x: round(ev.offsetX),
-					y: round(ev.offsetY)
+        this.old = {
+          x: round(ev.offsetX),
+          y: round(ev.offsetY)
         };
-        this.redraw()
-			}
+        this.redraw();
+      }
     },
     redraw() {
       ctx.putImageData(arr, 0, 0);
@@ -209,8 +215,8 @@ export default {
       arr.data[start + 1] = parseInt(this.selectedColor.slice(3, 5), 16);
       arr.data[start + 2] = parseInt(this.selectedColor.slice(5, 7), 16);
       arr.data[start + 3] = 255;
-    },
-	}
+    }
+  }
 };
 </script>
 
@@ -219,17 +225,17 @@ canvas {
   position: absolute;
   top: 0;
   left: 0;
-	touch-action: none;
+  touch-action: none;
   transform-origin: top left;
-	background: white;
+  background: white;
   image-rendering: pixelated;
 }
 
-.wrapper{
+.wrapper {
   position: relative;
   width: 800px;
   height: 600px;
-  background: #DDD;
+  background: #ddd;
   overflow: scroll;
 }
 </style>
