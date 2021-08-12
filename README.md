@@ -6,6 +6,18 @@
 - 右クリックでスポイト
 - 塗りつぶし機能つき
 
+# 使い方
+
+下記コマンドで新規作成をするか、
+
+![image](https://user-images.githubusercontent.com/3132889/92401689-1e463880-f169-11ea-979d-82b3fa07466c.png)
+
+PNGファイルを右クリックしてSprite Editorで開いてください。
+
+![image](https://user-images.githubusercontent.com/3132889/92401733-39b14380-f169-11ea-98e4-fa57937e40e1.png)
+
+![image](https://user-images.githubusercontent.com/3132889/92401783-5188c780-f169-11ea-8c32-4ecfb9795e9c.png)
+
 # できないこと
 
 - リサイズ
