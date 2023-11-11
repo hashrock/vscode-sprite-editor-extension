@@ -56,6 +56,7 @@ let imageData;
 import * as FloodFill from "./flood";
 import * as color from "./color";
 
+
 const colors = [
   "#000000",
   "#9d9d9d",
@@ -235,14 +236,14 @@ export default {
           canvas.setPointerCapture(ev.pointerId);
           this.drag = true;
           this.old = {
-            x: round(ev.offsetX),
-            y: round(ev.offsetY)
+            x: Math.floor(ev.offsetX),
+            y: Math.floor(ev.offsetY)
           };
           this.move(ev);
         }
       }
       if (ev.button === 2) {
-        const pixel = this.getPixel(round(ev.offsetX), round(ev.offsetY));
+        const pixel = this.getPixel(Math.floor(ev.offsetX), Math.floor(ev.offsetY));
         this.selectedColor =
           "#" +
           parseInt(pixel[0]).toString(16) +

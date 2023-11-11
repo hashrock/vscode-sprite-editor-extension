@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-
-import {BinaryEditorProvider} from "@hashrock/vscode-easy-custom-editor/dist/BinaryEditorProvider"
+import { BinaryEditorProvider } from './BinaryEditorProvider';
 
 export function activate(context: vscode.ExtensionContext) {
 	if (+vscode.version.match(/1\.(\d+)/)![1] >= 45) {
