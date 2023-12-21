@@ -3,7 +3,6 @@
   "displayName": "VSCode Sprite Editor Extension",
   "description": "VSCode Sprite Editor Extension",
   "version": "0.0.4",
-  "enableProposedApi": false,
   "publisher": "hashrock",
   "engines": {
     "vscode": "^1.48.0"

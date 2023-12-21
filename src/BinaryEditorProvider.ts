@@ -110,15 +110,30 @@ export class BinaryEditorProvider implements vscode.CustomEditorProvider<BinaryD
 		const host = false ? "https://hashrock.github.io/vscode-sprite-editor-view/" : "http://localhost:5173/"
 
 		webviewPanel.webview.html = `<html>
-<head><style>html, body{margin:0; width: 100%; height: 100%; display: flex;} iframe{width: 100%;}</style></head>
-<iframe id="child" border=0 src="${host}" title="Sprite Editor">
+<head><style>html, body{margin:0; width: 100%; height: 100%; display: flex; overflow: hidden;} iframe{width: 100%; height: 100%;}</style></head>
+<iframe id="child" border=0 frameBorder="0" src="${host}" title="Sprite Editor">
 </iframe>
-<textarea id="debug"></textarea>
+<textarea id="debug" style="display:none"></textarea>
 <script>
+const textarea = document.getElementById("debug")
+
+function log(...args) {
+	textarea.value += "\\n" + args.join(" ")
+}
+log("init")
+window.addEventListener("load", (e) => {
+	log("load")
+})
+
 const vscode = acquireVsCodeApi();
 const child = document.getElementById("child");
 
+child.addEventListener("load", (e) => {
+	vscode.postMessage({type: "ready"});
+})
+
 window.addEventListener("message", (e) => {
+	log(e.data)
 	if (e.data.type === "update" || e.data.type === "response" || e.data.type === "ready") {
 		vscode.postMessage(e.data);
 		return;
@@ -127,14 +142,13 @@ window.addEventListener("message", (e) => {
 		child.contentWindow.postMessage(e.data, "*");
 		return;
 	}
-};);
-
+})
 window.addEventListener("unload", () => {
 	window.removeEventListener("message", onMessage);
 });
+
 </script>
 </html>`
-
 		webviewPanel.webview.onDidReceiveMessage(e => this.onMessage(document, e));
 
 		// Wait for the webview to be properly ready before we init
