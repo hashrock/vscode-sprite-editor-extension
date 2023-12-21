@@ -14,6 +14,7 @@ export interface BinaryEditorOption{
 
 export class BinaryEditorProvider implements vscode.CustomEditorProvider<BinaryDocument> {
 	private static newFileId = 1;
+	private document : BinaryDocument | null = null;
 
 	public static register(context: vscode.ExtensionContext, option: BinaryEditorOption): vscode.Disposable {
 
@@ -64,6 +65,7 @@ export class BinaryEditorProvider implements vscode.CustomEditorProvider<BinaryD
 				}
 				const panel = webviewsForDocument[0];
 				const response = await this.postMessageWithResponse<number[]>(panel, 'getFileData', {});
+
 				return new Uint8Array(response);
 			}
 		});
@@ -89,6 +91,8 @@ export class BinaryEditorProvider implements vscode.CustomEditorProvider<BinaryD
 		}));
 
 		document.onDidDispose(() => disposeAll(listeners));
+
+		this.document = document;
 
 		return document;
 	}
@@ -135,6 +139,7 @@ child.addEventListener("load", (e) => {
 window.addEventListener("message", (e) => {
 	log(e.data)
 	if (e.data.type === "update" || e.data.type === "response" || e.data.type === "ready") {
+		console.log("postMessage", e.data)
 		vscode.postMessage(e.data);
 		return;
 	}
@@ -142,11 +147,14 @@ window.addEventListener("message", (e) => {
 		child.contentWindow.postMessage(e.data, "*");
 		return;
 	}
+	if(e.data.type === "save") {
+		vscode.postMessage(e.data);
+		return;
+	}
 })
 window.addEventListener("unload", () => {
 	window.removeEventListener("message", onMessage);
 });
-
 </script>
 </html>`
 		webviewPanel.webview.onDidReceiveMessage(e => this.onMessage(document, e));
@@ -240,6 +248,14 @@ window.addEventListener("unload", () => {
 					callback?.(message.body);
 					return;
 				}
+
+			case 'save':
+				console.log("save")
+				this.saveCustomDocument(document, new vscode.CancellationTokenSource().token);
+				this.saveCustomDocumentAs(document, document.uri, new vscode.CancellationTokenSource().token);
+				// document.save(new vscode.CancellationTokenSource().token);
+				return;
+
 		}
 	}
 }
